@@ -2,50 +2,25 @@ import cv2
 import numpy as np
 from typing import Tuple
 
-MAX_TEMP: int = 6500
-MIN_TEMP: int = 2000
+
+def calculate_average_color(frame: np.ndarray) -> Tuple[float, float, float]:
+    avg_b: float = np.mean(frame[:, :, 0])
+    avg_g: float = np.mean(frame[:, :, 1])
+    avg_r: float = np.mean(frame[:, :, 2])
+    return avg_b, avg_g, avg_r
 
 
-def calculate_brightness(frame: np.ndarray) -> float:
-    gray: np.ndarray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return float(np.mean(gray))
+def map_compensation_color(avg_color: Tuple[float, float, float]) -> Tuple[int, int, int]:
+    norm_color = [c / 255.0 for c in avg_color]
+    comp_color = [1.0 - c for c in norm_color]
+    return tuple(int(c * 255) for c in comp_color)
 
 
-def calculate_color_temperature(frame: np.ndarray) -> float:
-    frame_rgb: np.ndarray = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    avg_r: float = float(np.mean(frame_rgb[:, :, 0]))
-    avg_g: float = float(np.mean(frame_rgb[:, :, 1]))
-    avg_b: float = float(np.mean(frame_rgb[:, :, 2]))
-
-    # normalizza
-    r_norm: float = avg_r / (avg_r + avg_g + avg_b)
-    g_norm: float = avg_g / (avg_r + avg_g + avg_b)
-    b_norm: float = avg_b / (avg_r + avg_g + avg_b)
-
-    # coordinate cromaticità
-    x: float = 0.4124 * r_norm + 0.3576 * g_norm + 0.1805 * b_norm
-    y: float = 0.2126 * r_norm + 0.7152 * g_norm + 0.0722 * b_norm
-
-    # CCT to Kelvin
-    n: float = (x - 0.3320) / (0.1858 - y)
-    cct: float = 449 * n**3 + 3525 * n**2 + 6823.3 * n + 5520.33
-
-    return cct
-
-
-def map_compensation_color(brightness: float, temperature: float) -> Tuple[int, int, int]:
-    brightness_factor: float = np.clip(1.2 - (brightness / 255), 0.2, 1.0)
-    temperature = np.clip(temperature, MIN_TEMP, MAX_TEMP)
-
-    red: int = int(np.interp(temperature, [MIN_TEMP, MAX_TEMP], [50, 255]))
-    blue: int = int(np.interp(temperature, [MIN_TEMP, MAX_TEMP], [255, 50]))
-    green: int = int((red + blue) / 3)
-
-    red = int(red * brightness_factor)
-    green = int(green * brightness_factor)
-    blue = int(blue * brightness_factor)
-
-    return (blue, green, red)
+def mix_colors(color1: Tuple[int, int, int], color2: Tuple[int, int, int]) -> Tuple[int, int, int]:
+    norm1 = [c / 255.0 for c in color1]
+    norm2 = [c / 255.0 for c in color2]
+    mixed = [min(1.0, norm1[i] + norm2[i]) for i in range(3)]
+    return tuple(int(c * 255) for c in mixed)
 
 
 def disable_auto_processing(cap: cv2.VideoCapture) -> None:
@@ -60,7 +35,7 @@ def main() -> None:
         cap: cv2.VideoCapture = cv2.VideoCapture(0)
 
         if not cap.isOpened():
-            raise RuntimeError("ERRORE: webcam non trovata.")
+            raise RuntimeError("Error: Webcam not found.")
 
         disable_auto_processing(cap)
 
@@ -68,30 +43,35 @@ def main() -> None:
             try:
                 ret, frame = cap.read()
                 if not ret:
-                    raise RuntimeError("ERRORE: frame non catturato.")
+                    raise RuntimeError("Error: Frame not captured.")
 
-                brightness: float = calculate_brightness(frame)
-                temp: float = calculate_color_temperature(frame)
-                lamp: Tuple[int, int, int] = map_compensation_color(
-                    brightness, temp)
+                avg_color: Tuple[float, float, float] = calculate_average_color(frame)
+                
+                room_color = avg_color
+                lamp_color: Tuple[int, int, int] = map_compensation_color(avg_color)
+                combined_color: Tuple[int, int, int] = mix_colors(room_color, lamp_color)
 
-                color_frame: np.ndarray = np.zeros(
-                    (200, 400, 3), dtype=np.uint8)
-                color_frame[:] = lamp
+                room_frame: np.ndarray = np.zeros((200, 400, 3), dtype=np.uint8)
+                room_frame[:] = room_color
+                lamp_frame: np.ndarray = np.zeros((200, 400, 3), dtype=np.uint8)
+                lamp_frame[:] = lamp_color
+                combined_frame: np.ndarray = np.zeros((200, 400, 3), dtype=np.uint8)
+                combined_frame[:] = combined_color
 
                 cv2.imshow("webcam", frame)
-                cv2.imshow("lampada", color_frame)
+                cv2.imshow("room", room_frame)
+                cv2.imshow("lamp", lamp_frame)
+                cv2.imshow("combined", combined_frame)
 
-                print(f"BRT: {brightness:.2f}, TMP: {temp:.2f}K, LMP: {lamp}")
+                print(f"ROOM:\t({round(avg_color[0])},{round(avg_color[1])},{round(avg_color[2])})\tLAMP:\t({round(lamp_color[0])},{round(lamp_color[1])},{round(lamp_color[2])})\tCOMBINED:\t{combined_color}")
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
             except RuntimeError as frame_error:
-                print(
-                    f"ERRORE CATTURA FRAME/PROCESSING: {frame_error}")
+                print(f"Frame Capture/Processing Error: {frame_error}")
                 break
     except RuntimeError as init_error:
-        print(f"ERRORE INIZIALIZIAZIONE: {init_error}")
+        print(f"Initialization Error: {init_error}")
     finally:
         if 'cap' in locals() and cap.isOpened():
             cap.release()
@@ -100,3 +80,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
