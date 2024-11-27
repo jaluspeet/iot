@@ -39,7 +39,9 @@ label, p {
 /* Footer */
 footer {
     background-color: #1f1f1f; /* Sfondo scuro */
-    padding: 10px 0;
+    padding: 20px 0;
+    text-align: center;
+  
 }
 
 footer p {
@@ -50,35 +52,12 @@ footer p {
 /* Bottone range descrizione */
 .col p {
     font-size: 0.9rem; /* Testo più piccolo */
-}
-
-/* Personalizzazione card */
-.card {
-    background-color: #222222;
-    color: #ffffff;
-    border: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.card .btn-primary {
-    background-color: #00d1b2;
-    border-color: #00d1b2;
-}
-
-.card .btn-primary:hover {
-    background-color: #009688;
-    border-color: #009688;
-}
+};
 
 /* Slider e testo */
 label.form-label {
     font-size: 1.5rem; /* Testo più grande per le etichette */
     color: #ffffff;
-}
-
-input[type="range"] {
-    accent-color: #00d1b2; /* Colore slider */
-    margin: 0 10px;
 }
 
 p {
@@ -95,3 +74,18 @@ p {
     gap: 1rem; /* Spazio tra elementi nella stessa riga */
 }
 
+input[type="range"]::-webkit-slider-thumb {
+    background-color: #ffc107;  /* Giallo Warning */
+    border-radius: 50%;  /* Per mantenere la forma rotonda */
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Opzionale: Effetto quando lo slider è attivo (durante l'interazione) */
+  input[type="range"]:active::-webkit-slider-thumb {
+    background-color: #e0a800; /* Giallo più scuro per effetto attivo */
+}
+
+  
+
+  
