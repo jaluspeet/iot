@@ -17,12 +17,12 @@ def calculate_color_temperature(frame: np.ndarray) -> float:
     avg_g: float = float(np.mean(frame_rgb[:, :, 1]))
     avg_b: float = float(np.mean(frame_rgb[:, :, 2]))
 
-    # Normalize
+    # normalizza
     r_norm: float = avg_r / (avg_r + avg_g + avg_b)
     g_norm: float = avg_g / (avg_r + avg_g + avg_b)
     b_norm: float = avg_b / (avg_r + avg_g + avg_b)
 
-    # Chromaticity coordinates
+    # coordinate cromaticità
     x: float = 0.4124 * r_norm + 0.3576 * g_norm + 0.1805 * b_norm
     y: float = 0.2126 * r_norm + 0.7152 * g_norm + 0.0722 * b_norm
 
@@ -34,16 +34,13 @@ def calculate_color_temperature(frame: np.ndarray) -> float:
 
 
 def map_compensation_color(brightness: float, temperature: float) -> Tuple[int, int, int]:
-    # Invert brightness
     brightness_factor: float = np.clip(1.2 - (brightness / 255), 0.2, 1.0)
-
-    # Invert temperature
     temperature = np.clip(temperature, MIN_TEMP, MAX_TEMP)
+
     red: int = int(np.interp(temperature, [MIN_TEMP, MAX_TEMP], [50, 255]))
     blue: int = int(np.interp(temperature, [MIN_TEMP, MAX_TEMP], [255, 50]))
     green: int = int((red + blue) / 3)
 
-    # Scale
     red = int(red * brightness_factor)
     green = int(green * brightness_factor)
     blue = int(blue * brightness_factor)
@@ -59,37 +56,46 @@ def disable_auto_processing(cap: cv2.VideoCapture) -> None:
 
 
 def main() -> None:
-    cap: cv2.VideoCapture = cv2.VideoCapture(0)
+    try:
+        cap: cv2.VideoCapture = cv2.VideoCapture(0)
 
-    if not cap.isOpened():
-        print("Error: Unable to access the webcam.")
-        return
+        if not cap.isOpened():
+            raise RuntimeError("ERRORE: webcam non trovata.")
 
-    disable_auto_processing(cap)
+        disable_auto_processing(cap)
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("Error: Failed to capture an image.")
-            break
+        while True:
+            try:
+                ret, frame = cap.read()
+                if not ret:
+                    raise RuntimeError("ERRORE: frame non catturato.")
 
-        brightness: float = calculate_brightness(frame)
-        temp: float = calculate_color_temperature(frame)
-        lamp: Tuple[int, int, int] = map_compensation_color(brightness, temp)
+                brightness: float = calculate_brightness(frame)
+                temp: float = calculate_color_temperature(frame)
+                lamp: Tuple[int, int, int] = map_compensation_color(
+                    brightness, temp)
 
-        color_frame: np.ndarray = np.zeros((200, 400, 3), dtype=np.uint8)
-        color_frame[:] = lamp
+                color_frame: np.ndarray = np.zeros(
+                    (200, 400, 3), dtype=np.uint8)
+                color_frame[:] = lamp
 
-        cv2.imshow("Webcam Feed", frame)
-        cv2.imshow("Compensating Solid Color", color_frame)
+                cv2.imshow("webcam", frame)
+                cv2.imshow("lampada", color_frame)
 
-        print(f"BRT: {brightness:.2f}, TMP: {temp:.2f}K, LMP: {lamp}")
+                print(f"BRT: {brightness:.2f}, TMP: {temp:.2f}K, LMP: {lamp}")
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            except RuntimeError as frame_error:
+                print(
+                    f"ERRORE CATTURA FRAME/PROCESSING: {frame_error}")
+                break
+    except RuntimeError as init_error:
+        print(f"ERRORE INIZIALIZIAZIONE: {init_error}")
+    finally:
+        if 'cap' in locals() and cap.isOpened():
+            cap.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
