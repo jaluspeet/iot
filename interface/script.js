@@ -52,6 +52,8 @@ autoCheck.addEventListener('change', () => {
     }
 });
 
+//--------------------------------------Parte di comunicazione
+
 // Funzione per inviare messaggi MQTT
 const sendMessage = (topic, payload) => {
     const message = new Paho.MQTT.Message(JSON.stringify(payload));
@@ -60,12 +62,11 @@ const sendMessage = (topic, payload) => {
     console.log("Messaggio inviato:", payload);
 };
 
-//--------------------------------------Parte di comunicazione
+
 
 // MQTT Configurazione
 const clientId = "web_client_" + Math.floor(Math.random() * 1000); // ID unico per il client
-const client = new Paho.MQTT.Client("localhost", 9001, clientId); // Cambia 'localhost' con l'IP del Raspberry Pi
-
+const client = new Paho.MQTT.Client("localhost", 9001, clientId); // Cambia 'localhost' 
 // Eventi MQTT
 client.onConnectionLost = (responseObject) => {
     console.error("Connessione persa: " + responseObject.errorMessage);
@@ -85,7 +86,7 @@ client.onMessageArrived = (message) => {
 client.connect({
     onSuccess: () => {
         console.log("Connesso al broker MQTT");
-        client.subscribe("iot/to_ui"); // Topic per ricevere i dati dal Raspberry
+        client.subscribe("iot/to_ui"); // Topic per ricevere i dati 
     },
 });
 
