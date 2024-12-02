@@ -81,7 +81,7 @@ input[type="range"]::-webkit-slider-thumb {
     height: 20px;
   }
   
-  /* Opzionale: Effetto quando lo slider è attivo (durante l'interazione) */
+  /* Effetto quando lo slider è attivo (durante l'interazione) */
   input[type="range"]:active::-webkit-slider-thumb {
     background-color: #e0a800; /* Giallo più scuro per effetto attivo */
 }
