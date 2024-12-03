@@ -84,14 +84,11 @@ class Lamp:
         temperature = settings.get("temperature", 127.5)
         brightness = settings.get("brightness", 255)
 
-        # Map temperature to red and blue
         red = temperature / 255.0
         blue = 1.0 - red
 
-        # Dynamically adjust green to be lamp-like
-        green = 0.3 + (temperature / 255.0) * 0.4  # Ranges from 0.3 to 0.7
+        green = 0.3 + (temperature / 255.0) * 0.4
 
-        # Adjust all for brightness
         red *= brightness / 255.0
         green *= brightness / 255.0
         blue *= brightness / 255.0
