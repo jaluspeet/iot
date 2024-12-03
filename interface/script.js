@@ -1,112 +1,114 @@
 document.addEventListener("DOMContentLoaded", () => { 
     console.log("Loaded");
+
+    // Elementi del DOM
+    const manualCheck = document.getElementById('manualCheck');
+    const autoCheck = document.getElementById('autoCheck');
+    const manualLumos = document.getElementById('manualLumos');
+    const manualTemp = document.getElementById('manualTemp');
+    const autoLumos = document.getElementById('autoLumos');
+    const autoTemp = document.getElementById('autoTemp');
+    const manualButton = document.getElementById("manualButton");
+    const autoButton = document.getElementById("autoButton");
+
+  // Funzione per mostrare la notifica
+    const showNotification = (message) => {
+        notification.textContent = message; // Aggiorna il messaggio
+        notification.classList.add("show"); // Mostra la notifica
+         setTimeout(() => {
+         notification.classList.remove("show"); // Nasconde la notifica dopo 5 secondi
+         },5000);
+    };
+
+    // Funzione per aggiornare lo stato dei pulsanti e degli input
+    const updateState = () => {
+        const isManualChecked = manualCheck.checked;
+        const isAutoChecked = autoCheck.checked;
+
+        // Stato modalità manuale
+        manualLumos.disabled = !isManualChecked;
+        manualTemp.disabled = !isManualChecked;
+        manualButton.disabled = !isManualChecked;
+        manualButton.style.backgroundColor = isManualChecked ? "var(--bs-warning)" : "gray";
+
+        //I pulsanti sono inizialmente disattivati. La funzione updateState garantisce che i pulsanti e 
+        //gli input siano abilitati/disabilitati in base allo stato delle checkbox.
+
+        // Stato modalità automatica
+        autoLumos.disabled = !isAutoChecked;
+        autoTemp.disabled = !isAutoChecked;
+        autoButton.disabled = !isAutoChecked;
+        autoButton.style.backgroundColor = isAutoChecked ? "var(--bs-warning)" : "gray";
+        
+
+        //Quando una checkbox viene deselezionata, il pulsante associato viene disattivato immediatamente, 
+        //e la funzione updateState si occupa di aggiornare il colore e lo stato.
+    };
+
+    
+
+    // Listener per la checkbox "Manuale"
+    manualCheck.addEventListener('change', () => {
+        if (manualCheck.checked) {
+            autoCheck.checked = false; // Deseleziona l'altra checkbox
+        }
+        updateState();
+    });
+
+    // Listener per la checkbox "Automatica"
+    autoCheck.addEventListener('change', () => {
+        if (autoCheck.checked) {
+            manualCheck.checked = false; // Deseleziona l'altra checkbox
+        }
+        updateState();
+    });
+
+    // Impedisce la digitazione manuale nei campi numerici
+    const numberFields = document.querySelectorAll('input[type="number"]');
+    numberFields.forEach(field => {
+        field.addEventListener('keydown', (event) => {
+            const allowedKeys = ["ArrowUp", "ArrowDown", "Tab", "Backspace", "Delete"];
+            if (!allowedKeys.includes(event.key)) event.preventDefault();
+        });
+    });
+
+    // Funzione per inviare i dati tramite i pulsanti INVIA
+    const handleSendMessage = (mode) => { //con il lamba controlla il valore mode della checkbox
+        const brightness = mode === "manual" ? manualLumos.value : autoLumos.value; //se è manuale mette il valore dello slider, altrimenti della form (forma if compatta)
+        const temperature = mode === "manual" ? manualTemp.value : autoTemp.value;
+
+        const payload = {
+            mode,
+            brightness: parseInt(brightness, 10), //convertire in valore intero
+            temperature: parseInt(temperature, 10),
+        };
+
+        sendMessage("paso", payload); //invio al topic paso
+        showNotification("INVIATO!"); // Mostra la notifica
+       
+    };
+
+    // Event listener per i pulsanti INVIA
+    manualButton.addEventListener("click", () => handleSendMessage("manual")); //chiamata ricorsiva in base a quale click del pulsante
+    autoButton.addEventListener("click", () => handleSendMessage("automatic"));
+
+    // Inizializza lo stato
+    updateState();
 });
 
-// Elementi del DOM
-const manualCheck = document.getElementById('manualCheck');
-const autoCheck = document.getElementById('autoCheck');
-const manualLumos = document.getElementById('manualLumos');
-const manualTemp = document.getElementById('manualTemp');
-const autoLumos = document.getElementById('autoLumos');
-const autoTemp = document.getElementById('autoTemp');
-
-// Funzione per attivare la modalità manuale
-const enableManualMode = () => {
-    manualLumos.disabled = false;
-    manualTemp.disabled = false;
-    autoLumos.disabled = true;
-    autoTemp.disabled = true;
-    sendMessage("iot/from_ui", { mode: "manual" }); // Invio del messaggio via MQTT
-};
-
-// Funzione per attivare la modalità automatica
-const enableAutoMode = () => {
-    manualLumos.disabled = true;
-    manualTemp.disabled = true;
-    autoLumos.disabled = false;
-    autoTemp.disabled = false;
-    sendMessage("iot/from_ui", { mode: "auto" }); // Invio del messaggio via MQTT
-};
-
-// Event listener per la checkbox "Manuale"
-manualCheck.addEventListener('change', () => {
-    if (manualCheck.checked) {
-        autoCheck.checked = false; // Deseleziona "Automatica" se "Manuale" è selezionata
-        enableManualMode();
-    } else {
-        manualLumos.disabled = true;
-        manualTemp.disabled = true;
-        sendMessage("iot/from_ui", { mode: "auto" }); // invio quando deselezioni
-    }
-});
-
-// Event listener per la checkbox "Automatica"
-autoCheck.addEventListener('change', () => {
-    if (autoCheck.checked) {
-        manualCheck.checked = false; // Deseleziona "Manuale" se "Automatica" è selezionata
-        enableAutoMode();
-    } else {
-        autoLumos.disabled = true;
-        autoTemp.disabled = true;
-        sendMessage("iot/from_ui", { mode: "manual" }); // invio quando deselezioni
-    }
-});
-
-//--------------------------------------Parte di comunicazione
+// -------------------------------------- Parte di comunicazione MQTT
 
 // Funzione per inviare messaggi MQTT
 const sendMessage = (topic, payload) => {
-    const message = new Paho.MQTT.Message(JSON.stringify(payload));
+    const message = new Paho.MQTT.Message(JSON.stringify(payload)); //invia il messaggio in formato JSON
     message.destinationName = topic;
     client.send(message);
     console.log("Messaggio inviato:", payload);
 };
 
-
-
-// MQTT Configurazione
-const clientId = "web_client_" + Math.floor(Math.random() * 1000); // ID unico per il client
-const client = new Paho.MQTT.Client("localhost", 9001, clientId); // Cambia 'localhost' 
-// Eventi MQTT
-client.onConnectionLost = (responseObject) => {
-    console.error("Connessione persa: " + responseObject.errorMessage);
-};
-client.onMessageArrived = (message) => {
-    console.log("Messaggio ricevuto: " + message.payloadString);
-
-    // Aggiorna interfaccia web con i dati ricevuti
-    const data = JSON.parse(message.payloadString);
-    if (data.average_color) {
-        const { r, g, b } = data.average_color;
-        document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`; // Cambia colore sfondo
-    }
-};
-
-// Connetti al broker
+// Configurazione MQTT
+const clientId = "web_client_" + Math.floor(Math.random() * 1000);
+const client = new Paho.MQTT.Client("localhost", 9001, clientId);
 client.connect({
-    onSuccess: () => {
-        console.log("Connesso al broker MQTT");
-        client.subscribe("iot/to_ui"); // Topic per ricevere i dati 
-    },
-});
-
-// Event listener per il controllo manuale
-document.getElementById("manualLumos").addEventListener("input", (e) => {
-    const brightness = e.target.value;
-    sendMessage("iot/from_ui", { brightness });
-});
-
-document.getElementById("manualTemp").addEventListener("input", (e) => {
-    const temperature = e.target.value;
-    sendMessage("iot/from_ui", { temperature });
-});
-
-document.getElementById("autoLumos").addEventListener("input", (e) => {
-    const brightness = e.target.value;
-    sendMessage("iot/from_ui", { auto_brightness: brightness });
-});
-
-document.getElementById("autoTemp").addEventListener("input", (e) => {
-    const temperature = e.target.value;
-    sendMessage("iot/from_ui", { auto_temperature: temperature });
+    onSuccess: () => console.log("Connesso al broker MQTT"),
 });
