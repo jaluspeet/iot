@@ -1,73 +1,50 @@
 # Lumo Pasos  
----
+
+Lumo Pasos è un'applicazione innovativa per la gestione dell'illuminazione ambientale che consente di regolare luminosità e temperatura attraverso modalità manuali e automatiche.  
 
 ## Funzionalità Principali  
 
 ### 1. Modalità Manuale  
-La modalità manuale consente all'utente di regolare direttamente i parametri attraverso un'interfaccia:  
-- **Luminosità:**  
-  - Regolabile con un cursore che varia da valori minimi a massimi.  
-  - Ideale per controllare l'intensità della luce in base alle preferenze.  
-- **Temperatura:**  
-  - Controllo tramite un cursore per impostare tonalità calde o fredde.  
-
----
+La modalità manuale consente all'utente di regolare i parametri tramite un'interfaccia web:  
+- **Luminosità:** Regolabile con uno slider per scegliere l'intensità desiderata.  
+- **Temperatura:** Slider per regolare la tonalità calda o fredda della luce.  
 
 ### 2. Modalità Automatica  
-La modalità automatica utilizza una webcam per calibrare la luminosità e la temperatura in base alle condizioni ambientali:  
-- **Analisi in tempo reale:**  
-  - L'app cattura immagini dalla webcam e calcola il colore medio dell'ambiente.  
-- **Compensazione cromatica:**  
-  - La luce della stanza viene regolata per bilanciare la luminosità e migliorare il comfort visivo.  
-
----
+La modalità automatica sfrutta una webcam per calibrare in tempo reale luminosità e temperatura:  
+- **Analisi ambientale:** La webcam cattura immagini per calcolare il colore medio dell'ambiente.  
+- **Adattamento dinamico:** La luce viene regolata automaticamente per migliorare il comfort visivo.  
 
 ## Caratteristiche Tecniche  
 
-### Analisi dell'Ambiente  
-L'applicazione analizza il colore medio dell'ambiente attraverso una webcam:  
-- I valori medi di blu, verde e rosso vengono calcolati con precisione.  
-- Questi dati vengono utilizzati per creare un'illuminazione compensata che armonizza l'ambiente.
+### Server Web Flask  
+- L'applicazione utilizza Flask per servire l'interfaccia web e gestire le richieste utente.  
+- Comunicazione in tempo reale tra client e server per l'applicazione delle modifiche.  
 
-### Compensazione del Colore  
-Il colore della luce emessa dalla lampada viene compensato per bilanciare i toni ambientali:  
-- **Formula:** `1.0 - valore_normalizzato` per ottenere il colore complementare.  
+### Analisi del Colore  
+- Calcolo dei valori medi di rosso, verde e blu (RGB) tramite OpenCV.  
+- Compensazione del colore con formule per creare un'illuminazione complementare.  
 
 ### Interfaccia Utente  
-L'app presenta un'interfaccia responsiva:  
-- **Slider** per il controllo manuale.  
-- **Input numerici** per impostare valori specifici nella modalità automatica.  
-- **Color Picker** per scegliere il colore preferito della luce.  
-
----
+- **Modalità manuale:** Slider e input numerici per personalizzare luminosità e temperatura.  
+- **Modalità automatica:** Regolazione automatica basata sui dati acquisiti dalla webcam.  
+- **Color Picker:** Possibilità di scegliere un colore personalizzato per l'illuminazione.  
 
 ## Istruzioni per l'Uso  
+### Modalità Manuale  
+- Attivare il controllo manuale e usare gli slider per regolare luminosità e temperatura.  
 
-1. **Modalità Manuale:**  
-   - Attiva il controllo manuale con il checkbox "Manuale".  
-   - Usa gli slider per regolare luminosità e temperatura.  
-
-2. **Modalità Automatica:**  
-   - Attiva il controllo automatico con il checkbox "Automatica".  
-   - Imposta i valori desiderati per luminosità e temperatura.  
-   - La webcam si occuperà del resto 
-
-3. **Color Picker:**  
-   - Seleziona un colore personalizzato per la luce utilizzando l'apposito selettore.
-
----
+### Modalità Automatica  
+- Attivare il controllo automatico e lasciare che la webcam regoli i parametri.  
 
 ## Tecnologie Utilizzate  
-
-- **HTML5 e CSS3:** Per creare un'interfaccia utente moderna e responsiva.  
-- **Bootstrap:** Per velocizzare lo sviluppo.  
-- **Python (OpenCV):** Per la gestione della webcam e il calcolo del colore medio.  
-- **JavaScript:** Per il controllo dinamico delle modalità e dell'interazione utente.  
-
----
+- **Flask:** Framework per la gestione del server web.  
+- **HTML5, CSS3, Bootstrap:** Per un'interfaccia moderna e responsiva.  
+- **JavaScript:** Per l'interattività dell'interfaccia.  
+- **OpenCV (Python):** Per l'elaborazione delle immagini catturate dalla webcam.  
 
 ## Autori  
 Lumo Pasos è stato sviluppato da:  
-- Alessandro Dominici  
-- Jacopo Spitaleri  
-- Mactar Seck Ibrahima  
+- **Alessandro Dominici**  
+- **Jacopo Spitaleri**  
+- **Mactar Seck Ibrahima**  
+
