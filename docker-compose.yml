@@ -1,0 +1,29 @@
+services:
+  iot_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: iot_server
+    hostname: iot_server
+    networks:
+      iot_network:
+        aliases:
+          - iot_server
+    ports:
+      - "1883:1883"
+
+  iot_client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: iot_client
+    hostname: iot_client
+    networks:
+      iot_network:
+        aliases:
+          - iot_client
+
+networks:
+  iot_network:
+    driver: bridge
+

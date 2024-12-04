@@ -4,7 +4,7 @@ import json
 import paho.mqtt.client as mqtt
 import numpy as np
 
-BROKER = "localhost"
+BROKER = "iot_client"
 TOPIC = "paso"
 PORT = 1883
 CLIENT_ID = 60

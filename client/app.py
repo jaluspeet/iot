@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import paho.mqtt.client as mqtt
 
-BROKER = "localhost"
+BROKER = "iot_server"
 TOPIC = "paso"
 PORT = 1883
 CLIENT_ID = 60
