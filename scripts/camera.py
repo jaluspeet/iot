@@ -143,13 +143,6 @@ class Client:
         self.client.disconnect()
 
 
-# CLEANUP
-def cleanup(camera: Camera, client: Client) -> None:
-    if camera.cap.isOpened():
-        camera.cap.release()
-    client.stop()
-
-
 if __name__ == "__main__":
 
     try:
@@ -175,10 +168,9 @@ if __name__ == "__main__":
                 lamp_color: Color = Lamp.decide_lamp_color(client.inbox, frame_color)
                 lamp1.set_color(lamp_color)
 
-            print(f"FRAME:\t{frame_color}\tLAMP:\t{lamp_color}")
-
     except RuntimeError as init_error:
         print(f"INIT ERROR: {init_error}")
 
     finally:
-        cleanup(camera, client)
+        camera.cap.release()
+        client.stop()
