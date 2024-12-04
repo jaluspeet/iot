@@ -7,12 +7,15 @@
     <meta name="description" content="Regolazione automatica luminosità e temperatura">
     <meta name="author" content="Alessandro, Jacopo, Mactar">
     <title>Lumo Pasos</title>
+
     <!-- Link a Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Link al tuo file CSS personalizzato -->
-    <link rel="stylesheet" href="../styles.css">
+    
+    <!-- Link al file CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
     <!-- Favicon -->
-    <link rel="icon" href="../images/lamp.png" type="image/png">
+    <link rel="icon" href="{{ url_for('static', filename='images/lamp.png') }}">
 </head>
 
 <body>
@@ -23,7 +26,7 @@
                 <div class="row align-items-center justify-content-center">
                     <!-- Logo centrato -->
                     <div class="col-auto d-flex justify-content-center">
-                        <img src="../images/logo1_transparent.png" alt="Logo Lampada" style="width: 60px; height: auto;">
+                        <img src="{{ url_for('static', filename='images/logo1_transparent.png') }}" alt="Logo Lampada" style="width: 60px; height: auto;">
                     </div>
                 </div>
             </div>
@@ -36,7 +39,8 @@
             <h1>Controllo della Luce</h1>
         </div>
         <div class="row mt-5">
-            <!-- Controllo manuale -->
+            
+	    <!-- Controllo manuale -->
             <div class="col-md-6 border-end">
                 <div class="text-center">
                     <h2>Controllo Manuale</h2>
@@ -115,15 +119,6 @@
             <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" style="width: 100%"></div>
         </div>
 
-        <!-- Color Picker -->
-        <div class="container text-center my-4" style="padding-top: 2cm;">
-            <label for="scritta" class="form-label me-3 fs-2">Scegli un Colore!</label>
-            <div class="d-flex justify-content-center align-items-center">
-                <label for="Colore" class="form-label me-3 fs-4">Colore:</label>
-                <input type="color" class="form-control form-control-color" id="Colore" value="#000000" title="scegli un colore" style="width: 100px; height: 100px;">
-            </div>
-        </div>
-
         <div id="notification" class="notification">INVIATO!</div>
 
     </main>
@@ -135,12 +130,11 @@
         </div>
     </footer>
 
-    <!-- Script del Protocollo -->
-    <script src="https://unpkg.com/paho-mqtt@1.1.0/paho-mqtt.js"></script>
     <!-- Script di Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Script personalizzato -->
-    <script src="../script.js"></script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
     
 </body>
 
