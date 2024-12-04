@@ -1,6 +1,6 @@
 # Lumo Pasos  
 
-Lumo Pasos è un'applicazione innovativa per la gestione dell'illuminazione ambientale che consente di regolare luminosità e temperatura attraverso modalità manuali e automatiche.  
+Lumo Pasos è un'applicazione per la gestione dell'illuminazione ambientale che consente di regolare luminosità e temperatura attraverso modalità manuali e automatiche.  
 
 ## Funzionalità Principali  
 
