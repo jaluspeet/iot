@@ -4,6 +4,10 @@ import json
 import paho.mqtt.client as mqtt
 import numpy as np
 
+BROKER = "localhost"
+TOPIC = "paso"
+PORT = 1883
+CLIENT_ID = 60
 
 # COLOR
 class Color:
@@ -115,10 +119,11 @@ class Lamp:
 
 # CLIENT
 class Client:
-    def __init__(self, broker: str, port: int, topic: str) -> None:
+    def __init__(self, broker: str = BROKER, port: int = PORT, topic: str = TOPIC, clientId: int = CLIENT_ID) -> None:
         self.broker = broker
         self.port = port
         self.topic = topic
+        self.clientId = clientId
         self.client = mqtt.Client()
         self.inbox: dict = None
 
@@ -130,12 +135,13 @@ class Client:
 
     def on_message(self, client, userdata, msg) -> None:
         try:
-            self.inbox: dict = json.loads(msg.payload.decode())
+            self.inbox: dict = json.loads(msg.payload.decode('utf-8').replace("'", '"'))
+            print(self.inbox)
         except json.JSONDecodeError:
             print("Error decoding MQTT message payload.")
 
     def start(self) -> None:
-        self.client.connect(self.broker, self.port, 60)
+        self.client.connect(self.broker, self.port, CLIENT_ID)
         self.client.loop_start()
 
     def stop(self) -> None:
@@ -147,7 +153,7 @@ if __name__ == "__main__":
 
     try:
         # CLIENT - setup
-        client = Client("localhost", 1883, "paso")
+        client = Client()
         client.start()
 
         # CAMERA - setup
@@ -166,6 +172,7 @@ if __name__ == "__main__":
 
             if client.inbox:
                 lamp_color: Color = Lamp.decide_lamp_color(client.inbox, frame_color)
+                # print(f"LAMP:\t{lamp_color}\tROOM:\t{frame_color}")
                 lamp1.set_color(lamp_color)
 
     except RuntimeError as init_error:
