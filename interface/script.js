@@ -11,6 +11,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const manualButton = document.getElementById("manualButton");
     const autoButton = document.getElementById("autoButton");
 
+            // Configurazione MQTT
+        const clientId = "web_client_" + Math.floor(Math.random() * 1000);
+        const client = new Paho.Client("mynestrone.ddns.net", 1883, clientId);
+        client.connect({
+            onSuccess: () => console.log("Connesso al broker MQTT"),
+         });
+         console.log(client);
+         
+
+        // Funzione per inviare messaggi MQTT
+    const sendMessage = (topic, payload) => {
+        const message = new Paho.Message(JSON.stringify(payload)); //invia il messaggio in formato JSON
+        message.destinationName = topic;
+        client.send(message);
+        console.log("Messaggio inviato:", payload);
+        
+    };
+
+   
   // Funzione per mostrare la notifica
     const showNotification = (message) => {
         notification.textContent = message; // Aggiorna il messaggio
@@ -98,17 +117,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // -------------------------------------- Parte di comunicazione MQTT
 
-// Funzione per inviare messaggi MQTT
-const sendMessage = (topic, payload) => {
-    const message = new Paho.MQTT.Message(JSON.stringify(payload)); //invia il messaggio in formato JSON
-    message.destinationName = topic;
-    client.send(message);
-    console.log("Messaggio inviato:", payload);
-};
 
-// Configurazione MQTT
-const clientId = "web_client_" + Math.floor(Math.random() * 1000);
-const client = new Paho.MQTT.Client("localhost", 9001, clientId);
-client.connect({
-    onSuccess: () => console.log("Connesso al broker MQTT"),
-});
+
