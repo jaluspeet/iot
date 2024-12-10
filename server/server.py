@@ -3,10 +3,12 @@ import cv2
 import json
 import paho.mqtt.client as mqtt
 import numpy as np
+from tcolorpy import tcolor
 
 BROKER = "localhost"
 TOPIC = "paso"
 PORT = 1883
+INBOX = None
 
 # COLOR
 class Color:
@@ -26,9 +28,9 @@ class Color:
 
     @staticmethod
     def from_frame(frame: np.ndarray, normalize: bool = True) -> Color:
-        avg_b: float = np.mean(frame[:, :, 0])
-        avg_g: float = np.mean(frame[:, :, 1])
-        avg_r: float = np.mean(frame[:, :, 2])
+        avg_b = np.mean(frame[:, :, 0])
+        avg_g = np.mean(frame[:, :, 1])
+        avg_r = np.mean(frame[:, :, 2])
         return Color(avg_r, avg_g, avg_b, normalize)
 
     @staticmethod
@@ -37,49 +39,6 @@ class Color:
         mixed_g = min(1.0, color1.g + color2.g)
         mixed_b = min(1.0, color1.b + color2.b)
         return Color(mixed_r, mixed_g, mixed_b, normalize)
-
-
-# CAMERA
-class Camera:
-    def __init__(self, cap: cv2.VideoCapture, auto_processing: bool = False) -> None:
-        self.cap = cap
-        if not auto_processing:
-            self.disable_auto_processing()
-
-    def disable_auto_processing(self) -> None:
-        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
-        self.cap.set(cv2.CAP_PROP_AUTO_WB, 0)
-        self.cap.set(cv2.CAP_PROP_EXPOSURE, -4)
-        self.cap.set(cv2.CAP_PROP_GAIN, 0)
-
-    def get_frame(self) -> np.ndarray:
-        ret, frame = self.cap.read()
-        if not ret:
-            raise RuntimeError("Failed to capture frame from the webcam.")
-        return frame
-
-
-# LAMP
-class Lamp:
-    def __init__(self, name, height, width) -> None:
-        self.height = height
-        self.width = width
-        self.name = name
-
-    def turn_on(self) -> None:
-        self.window: np.ndarray = np.zeros((self.height, self.width, 3), dtype=np.uint8)
-        cv2.imshow(self.name, self.window)
-
-    def turn_off(self) -> None:
-        cv2.destroyWindow(self.name)
-
-    def set_color(self, color: Color) -> None:
-        self.window[:] = (
-            int(color.b * 255),
-            int(color.g * 255),
-            int(color.r * 255),
-        )
-        cv2.imshow(self.name, self.window)
 
     @staticmethod
     def decide_lamp_color(settings: dict, room_color: Color) -> Color:
@@ -116,66 +75,66 @@ class Lamp:
             raise ValueError(f"Unknown mode: {mode}")
 
 
-# CLIENT
-class MQTTClient:
-    def __init__(self, broker: str = BROKER, port: int = PORT, topic: str = TOPIC) -> None:
-        self.broker = broker
-        self.port = port
-        self.topic = topic
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        self.inbox: dict = None
+# CAMERA
+class Camera:
+    def __init__(self, cap: cv2.VideoCapture, auto_processing: bool = False) -> None:
+        self.cap = cap
+        if not auto_processing:
+            self.disable_auto_processing()
 
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
+    def disable_auto_processing(self) -> None:
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+        self.cap.set(cv2.CAP_PROP_AUTO_WB, 0)
+        self.cap.set(cv2.CAP_PROP_EXPOSURE, -4)
+        self.cap.set(cv2.CAP_PROP_GAIN, 0)
 
-    def on_connect(self, client, userdata, flags, rc) -> None:
-        client.subscribe(self.topic)
+    def get_frame(self) -> np.ndarray:
+        ret, frame = self.cap.read()
+        if not ret:
+            raise RuntimeError("Failed to capture frame from the webcam.")
+        return frame
 
-    def on_message(self, client, userdata, msg) -> None:
-        try:
-            self.inbox: dict = json.loads(msg.payload.decode('utf-8').replace("'", '"'))
-            print(self.inbox)
-        except json.JSONDecodeError:
-            print("Error decoding MQTT message payload.")
 
-    def start(self) -> None:
-        self.client.connect(self.broker, self.port, 60)
-        self.client.loop_start()
+def on_connect(client, userdata, flags, rc, *args) -> None:
+    client.subscribe(TOPIC)
 
-    def stop(self) -> None:
-        self.client.loop_stop()
-        self.client.disconnect()
-
+def on_message(client, userdata, msg, *args) -> None:
+    global INBOX
+    try:
+        INBOX = json.loads(msg.payload.decode('utf-8').replace("'", '"'))
+        print(INBOX)
+    except json.JSONDecodeError:
+        print("Error decoding MQTT message payload.")
 
 if __name__ == "__main__":
 
     try:
         # CLIENT - setup
-        client = MQTTClient(BROKER, PORT, TOPIC)
-        client.start()
+        mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        # mqttc = mqtt.Client()
+        mqttc.on_connect = on_connect
+        mqttc.on_message = on_message
+        mqttc.connect(BROKER, PORT, 60)
+        mqttc.loop_start()
 
         # CAMERA - setup
         camera: Camera = Camera(cv2.VideoCapture(0))
         if not camera.cap.isOpened():
             raise RuntimeError("Webcam not found.")
 
-        # LAMP - setup
-        lamp1: Lamp = Lamp("lampada1", 200, 400)
-        lamp1.turn_on()
-
         # MAIN LOOP
         while True:
             frame: np.ndarray = camera.get_frame()
             frame_color: Color = Color.from_frame(frame)
 
-            if client.inbox:
-                lamp_color: Color = Lamp.decide_lamp_color(client.inbox, frame_color)
-                print(f"LAMP:\t{lamp_color}\tROOM:\t{frame_color}")
-                lamp1.set_color(lamp_color)
+            if INBOX:
+                lamp_color: Color = Color.decide_lamp_color(INBOX, frame_color)
+                print(tcolor(f"LAMP:\t{lamp_color}", color=str(lamp_color)), tcolor(f"\tROOM:\t{frame_color}", color=str(frame_color)))
 
     except RuntimeError as init_error:
         print(f"INIT ERROR: {init_error}")
 
     finally:
         camera.cap.release()
-        client.stop()
+        mqttc.loop_stop()
+        mqttc.disconnect()

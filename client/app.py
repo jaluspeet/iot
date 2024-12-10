@@ -7,6 +7,7 @@ PORT = 1883
 
 app = Flask(__name__)
 
+# mqtt_client = mqtt.Client()
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.connect(BROKER, PORT, 60)
 
