@@ -1,16 +1,14 @@
 from flask import Flask, render_template, request, jsonify
 import paho.mqtt.client as mqtt
 
-BROKER = "iot_server"
+BROKER = "localhost"
 TOPIC = "paso"
 PORT = 1883
-CLIENT_ID = 60
-
 
 app = Flask(__name__)
 
-mqtt_client = mqtt.Client()
-mqtt_client.connect(BROKER, PORT, CLIENT_ID)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client.connect(BROKER, PORT, 60)
 
 
 @app.route('/')
