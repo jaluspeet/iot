@@ -4,6 +4,7 @@ import json
 import paho.mqtt.client as mqtt
 import numpy as np
 from tcolorpy import tcolor
+import time
 
 BROKER = "localhost"
 TOPIC = "paso"
@@ -40,6 +41,7 @@ class Color:
         mixed_b = min(1.0, color1.b + color2.b)
         return Color(mixed_r, mixed_g, mixed_b, normalize)
 
+
     @staticmethod
     def decide_lamp_color(settings: dict, room_color: Color) -> Color:
         mode = settings.get("mode", "manual")
@@ -48,7 +50,6 @@ class Color:
 
         red = temperature / 255.0
         blue = 1.0 - red
-
         green = 0.3 + (temperature / 255.0) * 0.4
 
         red *= brightness / 255.0
@@ -56,21 +57,17 @@ class Color:
         blue *= brightness / 255.0
 
         target_color = Color(red, green, blue, normalize=False)
+        print(tcolor(f"\nTARGET:\t{target_color}-----------------------------------------------", color=str(target_color)))
 
         if mode == "manual":
             return target_color
 
         elif mode == "automatic":
-            offset_r = target_color.r - room_color.r
-            offset_g = target_color.g - room_color.g
-            offset_b = target_color.b - room_color.b
-
-            comp_r = min(1.0, max(0.0, room_color.r + offset_r))
-            comp_g = min(1.0, max(0.0, room_color.g + offset_g))
-            comp_b = min(1.0, max(0.0, room_color.b + offset_b))
-
-            return Color(comp_r, comp_g, comp_b, normalize=False)
-
+            lamp_r = max(0.0, target_color.r - room_color.r)
+            lamp_g = max(0.0, target_color.g - room_color.g)
+            lamp_b = max(0.0, target_color.b - room_color.b)
+            lamp_color = Color(lamp_r, lamp_g, lamp_b, normalize=False)
+            return lamp_color
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
@@ -102,7 +99,7 @@ def on_message(client, userdata, msg, *args) -> None:
     global INBOX
     try:
         INBOX = json.loads(msg.payload.decode('utf-8').replace("'", '"'))
-        print(INBOX)
+        print(f"\n\nREQUEST: {INBOX}")
     except json.JSONDecodeError:
         print("Error decoding MQTT message payload.")
 
@@ -129,7 +126,9 @@ if __name__ == "__main__":
 
             if INBOX:
                 lamp_color: Color = Color.decide_lamp_color(INBOX, frame_color)
-                print(tcolor(f"LAMP:\t{lamp_color}", color=str(lamp_color)), tcolor(f"\tROOM:\t{frame_color}", color=str(frame_color)))
+                mixed_color: Color = Color.mix_colors(lamp_color, frame_color)
+                print(tcolor(f"LAMP:\t{lamp_color}", color=str(lamp_color)), tcolor(f"\tROOM:\t{frame_color}", color=str(frame_color)), tcolor(f"\tMIX:\t{mixed_color}", color=str(mixed_color)))
+                time.sleep(1)
 
     except RuntimeError as init_error:
         print(f"INIT ERROR: {init_error}")
