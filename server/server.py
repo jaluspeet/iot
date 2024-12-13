@@ -57,7 +57,7 @@ class Color:
         blue *= brightness / 255.0
 
         target_color = Color(red, green, blue, normalize=False)
-        print(tcolor(f"\nTARGET:\t{target_color}-----------------------------------------------", color=str(target_color)))
+        print(tcolor(f"\nTARGET:\t{target_color}------------------------------------------------", color=str(target_color)))
 
         if mode == "manual":
             return target_color
@@ -128,12 +128,17 @@ if __name__ == "__main__":
                 lamp_color: Color = Color.decide_lamp_color(INBOX, frame_color)
                 mixed_color: Color = Color.mix_colors(lamp_color, frame_color)
                 print(tcolor(f"LAMP:\t{lamp_color}", color=str(lamp_color)), tcolor(f"\tROOM:\t{frame_color}", color=str(frame_color)), tcolor(f"\tMIX:\t{mixed_color}", color=str(mixed_color)))
+
+                # PLACEHOLDER: setting color of real lamp
+
                 time.sleep(1)
 
     except RuntimeError as init_error:
         print(f"INIT ERROR: {init_error}")
 
     finally:
-        camera.cap.release()
-        mqttc.loop_stop()
-        mqttc.disconnect()
+        if 'camera' in locals():
+            camera.cap.release()
+        if 'mqttc' in locals():
+            mqttc.loop_stop()
+            mqttc.disconnect()

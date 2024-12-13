@@ -1,4 +1,5 @@
-all: server client
+make mosquitto:
+	mosquitto
 
 server:
 	python server/server.py
